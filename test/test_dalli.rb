@@ -73,6 +73,7 @@ class TestDalli < Test::Unit::TestCase
 
     should "support multi-get" do
       memcached do |dc|
+        dc.close
         dc.flush
         resp = dc.get_multi(%w(a b c d e f))
         assert_equal({}, resp)
@@ -129,6 +130,7 @@ class TestDalli < Test::Unit::TestCase
         # rollover the 64-bit value, we'll get something undefined.
         resp = dc.incr('big', 1)
         assert_not_equal 0x10000000000000000, resp
+        dc.reset
       end
     end
 
@@ -179,11 +181,13 @@ class TestDalli < Test::Unit::TestCase
 
         resp = dc.stats
         assert_equal Hash, resp.class
+
+        dc.close
       end
     end
     
     should "support multithreaded access" do
-      memcached(11211) do |cache|
+      memcached(19123) do |cache|
         cache.flush
         workers = []
 

@@ -81,7 +81,6 @@ module ActiveSupport
         response = instrument(:increment, name, :amount => amount) do
           @data.incr(escape_key(namespaced_key(name, options)), amount)
         end
-        response == Response::NOT_FOUND ? nil : response.to_i
       rescue Dalli::DalliError
         nil
       end
@@ -95,7 +94,6 @@ module ActiveSupport
         response = instrument(:decrement, name, :amount => amount) do
           @data.decr(escape_key(namespaced_key(name, options)), amount)
         end
-        response == Response::NOT_FOUND ? nil : response.to_i
       rescue Dalli::DalliError
         nil
       end
@@ -109,6 +107,10 @@ module ActiveSupport
       # Get the statistics from the memcached servers.
       def stats
         @data.stats
+      end
+
+      def reset
+        @pool.reset
       end
 
       protected

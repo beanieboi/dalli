@@ -1,10 +1,11 @@
 require 'helper'
+require 'rails'
 
-class TestDalli < Test::Unit::TestCase
-  context 'activesupport caching' do
+class TestActiveSupport < Test::Unit::TestCase
+  context 'active_support caching' do
 
     should 'support fetch' do
-      with_activesupport("2.3.0", "3.0.0") do
+      with_activesupport do
         memcached do
           connect
           dvalue = @mc.fetch('somekeywithoutspaces', :expires_in => 1.second) { 123 }
@@ -27,7 +28,7 @@ class TestDalli < Test::Unit::TestCase
     end
 
     should 'support keys with spaces' do
-      with_activesupport("3.0.0") do
+      with_activesupport do
         memcached do
           connect
           dvalue = @mc.fetch('some key with spaces', :expires_in => 1.second) { 123 }
@@ -38,7 +39,7 @@ class TestDalli < Test::Unit::TestCase
     end      
 
     should 'support read_multi' do
-      with_activesupport("2.3.0", "3.0.0") do
+      with_activesupport do
         memcached do
           connect
           x = rand_key
@@ -56,7 +57,7 @@ class TestDalli < Test::Unit::TestCase
     end
 
     should 'support read, write and delete' do
-      with_activesupport("2.3.0", "3.0.0") do
+      with_activesupport do
         memcached do
           connect
           x = rand_key
@@ -81,7 +82,7 @@ class TestDalli < Test::Unit::TestCase
     end
     
     should 'support other esoteric commands' do
-      with_activesupport("2.3.0", "3.0.0") do
+      with_activesupport do
         memcached do
           connect
           ms = @mc.stats
@@ -93,35 +94,6 @@ class TestDalli < Test::Unit::TestCase
     end
   end
   
-  def with_activesupport(*versions)
-    versions.each do |version|
-      begin
-        pid = fork do
-          begin
-            trap("TERM") { exit }
-            gem 'activesupport', "~> #{version}"
-            requires(version)
-            yield
-          rescue Gem::LoadError
-            puts "Skipping activesupport #{version} test: #{$!.message}"
-          end
-        end
-      ensure
-        Process.wait(pid)
-      end
-    end
-  end
-
-  def requires(version)
-    case version
-    when '3.0.0'
-      require 'active_support/all'
-    when '2.3.0'
-      require 'active_support'
-      require 'active_support/cache/dalli_store23'
-    end
-  end
-
   def connect
     @dalli = ActiveSupport::Cache.lookup_store(:dalli_store, 'localhost:19122', :expires_in => 10.seconds)
     @mc = ActiveSupport::Cache.lookup_store(:mem_cache_store, 'localhost:19122', :expires_in => 10.seconds, :namespace => 'a')

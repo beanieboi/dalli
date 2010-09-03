@@ -75,8 +75,24 @@ In `config/environments/production.rb`:
     config.cache_store = :dalli_store
 
 
+Usage with Passenger
+------------------------
+
+Put this at the bottom of `config/environment.rb`:
+
+    if defined?(PhusionPassenger)
+      PhusionPassenger.on_event(:starting_worker_process) do |forked|
+        # Only works with DalliStore
+        Rails.cache.reset if forked
+      end
+    end
+
+
 Features and Changes
 ------------------------
+
+Dalli is **NOT** 100% API compatible with memcache-client.  If you have code which uses the MemCache
+API directly, it will likely need small tweaks.  Method parameters and return values changed slightly.
 
 memcache-client allowed developers to store either raw or marshalled values with each API call.  I feel this is needless complexity; Dalli allows you to control marshalling per-Client with the `:marshal => false` flag but you cannot explicitly set the raw flag for each API call.  By default, marshalling is enabled.
 
